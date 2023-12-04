@@ -240,10 +240,7 @@ class ValidatorSession:
                 timeout = 60
             )
             
-            bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m", len(responses))
-            bt.logging.info(f"\033[92m ✓ response 0 \033[0m", responses[0])
-            bt.logging.info(f"\033[92m ✓ response 2 \033[0m", responses[2])
-            bt.logging.info(f"\033[92m ✓ response 3 \033[0m", responses[3])
+            bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m")
             verif_results = list(map(self.verify_proof_string, responses))
             bt.logging.info(f"\033[92m ✓ verif_results🗞️. \033[0m", verif_results)
 

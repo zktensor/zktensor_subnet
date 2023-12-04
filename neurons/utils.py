@@ -22,10 +22,10 @@ import bittensor as bt
 import os
 import torch
 import git
-
+from neurons import __version__
     
 def get_remote_version():
-    url = "https://raw.githubusercontent.com/zktensor/zktensor_subnet/main/__init__.py"
+    url = "https://raw.githubusercontent.com/zktensor/zktensor_subnet/main/neurons/__init__.py"
     response = requests.get(url)
 
     if response.status_code == 200:
@@ -39,17 +39,13 @@ def get_remote_version():
         return 0
 
 def get_local_version():
-    with open('__init__.py', 'r') as file:
-        lines = file.readlines()
-        for line in lines:
-            if line.startswith('__version__'):
-                version_info = line.split('=')[1].strip(' "\'').replace('"', '')
-                return version_info
-    return None
+    return __version__
 
 def check_version_updated():
     remote_version = get_remote_version()
     local_version = get_local_version()
+    print("remote_version", remote_version)
+    print("local_version", local_version)
     
     if version2number(remote_version) > version2number(local_version):
         return True
@@ -109,7 +105,10 @@ def restart_app():
     os.execl(python, python, *sys.argv)
         
 def try_update():
-    if check_version_updated() == True:
-        bt.logging.info("found the latest version in the repo. try ♻️update...")
-        update_repo()
-        restart_app()
+    try:
+        if check_version_updated() == True:
+            bt.logging.info("found the latest version in the repo. try ♻️update...")
+            update_repo()
+            restart_app()
+    except Exception as e:
+        bt.logging.info(f"{e}")
