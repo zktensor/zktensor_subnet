@@ -69,7 +69,9 @@ def update_repo():
             return
         
         try:
+            bt.logging.info("try pulling")
             origin.pull(rebase=False)
+            bt.logging.info("try pulling success")
             
         except git.exc.GitCommandError as e:
             bt.logging.info(f"update : Merge conflict detected: {e} Recommend you manually commit changes and update")
