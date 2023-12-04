@@ -268,9 +268,11 @@ class ValidatorSession:
         self.init_loop_params()
 
         while True:
-            self.run_one_loop()
              # If we encounter an unexpected error, log it for debugging.
-            try_update()
+            if self.config.auto_update == True:
+                try_update()
+            self.run_one_loop()
+            
             
     def check_register(self):
         if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:

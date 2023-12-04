@@ -63,21 +63,21 @@ def update_repo():
         # origin.fetch()
         if repo.is_dirty(untracked_files=True):
             bt.logging.error("update failed: Uncommited changes detected. Please commit changes")
-            return
-        
+            return False
         try:
             bt.logging.info("try pulling")
             origin.pull()
             bt.logging.info("try pulling success")
-            
+            return True
         except git.exc.GitCommandError as e:
             bt.logging.info(f"update : Merge conflict detected: {e} Recommend you manually commit changes and update")
-            handle_merge_conflict(repo)
-            
-            return
+            return handle_merge_conflict(repo)
+        
         bt.logging.info("✅ Repo update success")
     except Exception as e:
         bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
+    
+    return False
         
 def handle_merge_conflict(repo):
     try:
@@ -93,9 +93,10 @@ def handle_merge_conflict(repo):
         repo.index.commit("Resolved merge conflicts automatically")
         bt.logging.info(f"Merge conflicts resolved, repository updated to remote state.")
         bt.logging.info(f"✅ Repo update success")
-        
+        return True
     except git.GitCommandError as e:
         bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
+        return False
 
 def version2number(version_string):
     version_digits = version_string.split(".")
@@ -106,12 +107,12 @@ def restart_app():
     
     python = sys.executable
     os.execl(python, python, *sys.argv)
-        
+    
 def try_update():
     try:
         if check_version_updated() == True:
             bt.logging.info("found the latest version in the repo. try ♻️update...")
-            update_repo()
-            restart_app()
+            if update_repo() == True:
+                restart_app()
     except Exception as e:
         bt.logging.info(f"{e}")

@@ -11,7 +11,7 @@ run-validators:
 .PHONY: run-validator
 run-validator: 
 	cd neurons && \
-	python validator.py \
+	pm2 start validator.py --name validator --interpreter python3 -- \
 	--netuid 39 \
 	--subtensor.network test \
 	--wallet.name test_validator \

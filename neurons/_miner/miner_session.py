@@ -9,6 +9,7 @@ import protocol
 from score.model_score import calculateScore
 import random
 from execution_layer.SqrtModelSession import SqrtModelSession
+from utils import try_update
 
 class MinerSession:
     def __init__(self, config):
@@ -61,7 +62,9 @@ class MinerSession:
         step = 0
         last_updated_block = subtensor.block - 100
         
-        while True:          
+        while True:
+            if self.config.auto_update == True:
+                try_update()          
             try:
                 if subtensor.block - last_updated_block >= 100:
                     bt.logging.trace(f"Setting miner weight")
