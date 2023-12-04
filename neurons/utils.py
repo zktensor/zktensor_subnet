@@ -70,7 +70,7 @@ def update_repo():
         
         try:
             bt.logging.info("try pulling")
-            origin.pull(rebase=False)
+            origin.pull()
             bt.logging.info("try pulling success")
             
         except git.exc.GitCommandError as e:
