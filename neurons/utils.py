@@ -65,19 +65,19 @@ def update_repo():
         print("origin", origin)
         origin.fetch()
         if repo.is_dirty(untracked_files=True):
-            bt.logging.info("❌update failed: Uncommited changes detected")
+            bt.logging.error("update failed: Uncommited changes detected. Please commit changes")
             return
         
         try:
             origin.pull(rebase=False)
         except git.exc.GitCommandError as e:
-            bt.logging.info(f"update : Merge conflict detected: {e}")
+            bt.logging.info(f"update : Merge conflict detected: {e} Recommend you manually commit changes and update")
             handle_merge_conflict(repo)
             
             return
         bt.logging.info("✅ Repo update success")
     except Exception as e:
-        bt.logging.info(f"❌update failed: {e}")
+        bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
         
 def handle_merge_conflict(repo):
     try:
@@ -94,7 +94,7 @@ def handle_merge_conflict(repo):
         bt.logging.info(f"Merge conflicts resolved, repository updated to remote state.")
         
     except git.GitCommandError as e:
-        bt.logging.info(f"❌update failed: {e}")
+        bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
 
 
             
