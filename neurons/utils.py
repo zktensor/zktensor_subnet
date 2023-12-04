@@ -56,7 +56,7 @@ def check_version_same():
         return False
 
 def update_repo():
-    os.system("git pull")
+    os.system("git pull origin main")
     bt.logging.info("update success✅")
     
     
