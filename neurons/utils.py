@@ -22,13 +22,14 @@ import bittensor as bt
 import os
 import torch
 import git
-from neurons import __version__
+from __init__ import __version__
     
 def get_remote_version():
     url = "https://raw.githubusercontent.com/zktensor/zktensor_subnet/main/neurons/__init__.py"
     response = requests.get(url)
-
+    
     if response.status_code == 200:
+        
         lines = response.text.split('\n')
         for line in lines:
             if line.startswith('__version__'):
