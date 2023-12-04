@@ -10,7 +10,7 @@ from score.model_score import calculateScore
 import random
 import json
 from execution_layer.SqrtModelSession import SqrtModelSession
-
+from utils import try_update
 class ValidatorSession:
     def __init__(self, config):
         self.config = config
@@ -273,6 +273,7 @@ class ValidatorSession:
         while True:
             self.run_one_loop()
              # If we encounter an unexpected error, log it for debugging.
+            try_update()
             
     def check_register(self):
         if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:

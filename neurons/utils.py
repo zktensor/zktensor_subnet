@@ -17,7 +17,10 @@ OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE S
 DEALINGS IN THE SOFTWARE.
 """
 import requests
-
+import sys
+import bittensor as bt
+import os
+import torch
 
     
 def get_remote_version():
@@ -28,7 +31,7 @@ def get_remote_version():
         lines = response.text.split('\n')
         for line in lines:
             if line.startswith('__version__'):
-                version_info = line.split('=')[1].strip(' "\'')
+                version_info = line.split('=')[1].strip(' "\'').replace('"', '')
                 return version_info
     else:
         print("Failed to get file content")
@@ -39,11 +42,28 @@ def get_local_version():
         lines = file.readlines()
         for line in lines:
             if line.startswith('__version__'):
-                version_info = line.split('=')[1].strip(' "\'')
+                version_info = line.split('=')[1].strip(' "\'').replace('"', '')
                 return version_info
     return None
 
-def check_version():
-    pass
+def check_version_same():
+    remote_version = get_remote_version()
+    local_version = get_local_version()
+    
+    if remote_version == local_version:
+        return True
+    else:
+        return False
+
 def update_repo():
-    pass
+    os.system("git pull")
+    bt.logging.info("update success✅")
+    
+    
+def try_update():
+    if check_version_same() == True:
+        pass
+    else:
+        bt.logging.info("found the latest version in the repo. try ♻️update...")
+        update_repo()
+    
