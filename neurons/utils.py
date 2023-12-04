@@ -21,6 +21,7 @@ import sys
 import bittensor as bt
 import os
 import torch
+import git
 
     
 def get_remote_version():
@@ -56,9 +57,46 @@ def check_version_same():
         return False
 
 def update_repo():
-    os.system("git pull origin main")
-    bt.logging.info("update success✅")
-    
+    try:
+        repo = git.Repo(search_parent_directories=True)
+        repo_path = repo.working_tree_dir
+        origin = repo.remotes.origin
+        
+        origin.fetch()
+        if repo.is_dirty(untracked_files=True):
+            bt.logging.info("❌update failed: Uncommited changes detected")
+            return
+        
+        try:
+            origin.pull(rebase=False)
+        except git.exc.GitCommandError as e:
+            bt.logging.info(f"update : Merge conflict detected: {e}")
+            handle_merge_conflict(repo)
+            
+            return
+        bt.logging.info("✅ Repo update success")
+    except Exception as e:
+        bt.logging.info(f"❌update failed: {e}")
+        
+def handle_merge_conflict(repo):
+    try:
+        repo.get.reset("--merge")
+        origin = repo.remotes.origin
+        current_branch = repo.active_branch
+        origin.pull(current_branch.name)
+
+        for item in repo.index.diff(None):
+            file_path = item.a_path
+            bt.logging.info(f"Resolving conflict in file: {file_path}")
+            repo.git.checkout('--theirs', file_path)
+        repo.index.commit("Resolved merge conflicts automatically")
+        bt.logging.info(f"Merge conflicts resolved, repository updated to remote state.")
+        
+    except git.GitCommandError as e:
+        bt.logging.info(f"❌update failed: {e}")
+
+
+            
     
 def try_update():
     if check_version_same() == True:

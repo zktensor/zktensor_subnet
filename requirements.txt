@@ -9,3 +9,4 @@ boto3
 ezkl
 onnx
 bittensor
+GitPython
