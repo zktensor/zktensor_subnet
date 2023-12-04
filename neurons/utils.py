@@ -84,7 +84,7 @@ def update_repo():
         
 def handle_merge_conflict(repo):
     try:
-        repo.get.reset("--merge")
+        repo.git.reset("--merge")
         origin = repo.remotes.origin
         current_branch = repo.active_branch
         origin.pull(current_branch.name)
