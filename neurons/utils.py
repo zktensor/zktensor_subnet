@@ -102,6 +102,8 @@ def version2number(version_string):
     return 100 * version_digits[0] + 10 * version_digits[1] + version_digits[2]
 
 def restart_app():
+    bt.logging.info("👩‍🦱app restarted due to the update")
+    
     python = sys.executable
     os.execl(python, python, *sys.argv)
         
