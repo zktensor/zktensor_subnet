@@ -45,12 +45,14 @@ def get_local_version():
 def check_version_updated():
     remote_version = get_remote_version()
     local_version = get_local_version()
-    print("remote_version", remote_version)
-    print("local_version", local_version)
+    bt.logging.info(f"🔔 remote_version: {remote_version}, local_version: {local_version}")
+    
     
     if version2number(remote_version) > version2number(local_version):
+        bt.logging.info(f"👩‍👦update to the latest version is required")
         return True
     else:
+        bt.logging.info(f"👩‍👦update is not required")
         return False
 
 def update_repo():
@@ -114,5 +116,6 @@ def try_update():
             bt.logging.info("found the latest version in the repo. try ♻️update...")
             if update_repo() == True:
                 restart_app()
+            
     except Exception as e:
         bt.logging.info(f"{e}")
