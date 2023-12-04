@@ -16,7 +16,6 @@ class ValidatorSession:
         self.config = config
         self.configure()
         self.check_register()
-        print("This is updated print")
     def __enter__(self):
         return self
 
