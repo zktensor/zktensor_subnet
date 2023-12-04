@@ -95,6 +95,7 @@ def handle_merge_conflict(repo):
             repo.git.checkout('--theirs', file_path)
         repo.index.commit("Resolved merge conflicts automatically")
         bt.logging.info(f"Merge conflicts resolved, repository updated to remote state.")
+        bt.logging.info(f"✅ Repo update success")
         
     except git.GitCommandError as e:
         bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
