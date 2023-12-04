@@ -60,8 +60,9 @@ def update_repo():
     try:
         repo = git.Repo(search_parent_directories=True)
         repo_path = repo.working_tree_dir
+        print("repo_path", repo_path)
         origin = repo.remotes.origin
-        
+        print("origin", origin)
         origin.fetch()
         if repo.is_dirty(untracked_files=True):
             bt.logging.info("❌update failed: Uncommited changes detected")
