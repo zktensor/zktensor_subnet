@@ -28,6 +28,8 @@ import traceback
 import bittensor as bt
 import json
 
+from neurons.utils import get_local_version, get_remote_version
+
 # This function is responsible for setting up and parsing command-line arguments.
 def get_config():
     """
@@ -72,6 +74,9 @@ def main( config ):
     This is the main function that sets up logging, initializes bittensor objects, and starts the validator loop.
     """
     
+    print("local version", get_local_version())
+    print("remote version", get_remote_version())
+    return
     # Set up logging with the provided configuration and directory.
     bt.logging(config=config, logging_dir=config.full_path)
     bt.logging.info(f"🚀 Running validator  for subnet: {config.netuid} on network: {config.subtensor.chain_endpoint} with config:")
@@ -94,10 +99,10 @@ def main( config ):
     metagraph = subtensor.metagraph( config.netuid )
     metagraph.sync(subtensor = subtensor)
     bt.logging.info(f"Metagraph: {metagraph}")
-
+    subnet = bt.metagraph(netuid = config.netuid, lite = False)
     
     queryable_uids = (metagraph.total_stake < 1.024e3)
-    bt.logging.info(f"queryable_uids", queryable_uids)
+    # bt.logging.info(f                                                                                                                                                                                                                                                                                                                                   "queryable_uids", queryable_uids)
     
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":

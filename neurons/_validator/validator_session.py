@@ -8,6 +8,8 @@ import json
 import protocol
 from score.model_score import calculateScore
 import random
+import json
+from execution_layer.SqrtModelSession import SqrtModelSession
 
 class ValidatorSession:
     def __init__(self, config):
@@ -33,15 +35,18 @@ class ValidatorSession:
         bt.logging.info("Building validation weights.")
         
         # Restore weights, or initialize weights for each miner to 0.
-        scores_file = "scores.pt"
-        try:
-            scores = torch.load(scores_file)
-            bt.logging.info(f"Loaded scores from save file: {scores}")
-        except:
-            scores = torch.zeros_like(self.metagraph.S, dtype=torch.float32)
-            bt.logging.info(f"Initialized all scores to 0")
-        print("🔢 scores", scores)
+        # scores_file = "scores.pt"
+        # try:
+        #     scores = torch.load(scores_file)
+        #     bt.logging.info(f"Loaded scores from save file: {scores}")
+        # except:
+        #     scores = torch.zeros_like(self.metagraph.S, dtype=torch.float32)
+        #     bt.logging.info(f"Initialized all scores to 0")
         
+        scores = torch.zeros_like(self.metagraph.S, dtype=torch.float32)
+        
+        weights = self.subnet.W
+
         # all nodes with more than 1e3 total stake are set to 0 (sets validators weights to 0)
         scores = scores * (self.metagraph.total_stake < 1.024e3)
         # set all nodes without ips set to 0
@@ -59,7 +64,7 @@ class ValidatorSession:
             self.scores = torch.cat((self.scores, new_scores))
             del new_scores
     
-        # If there are less uids than scores, remove some weights.
+    # If there are less uids than scores, remove some weights.
     def init_loop_params(self):
         self.step = 0
         self.current_block = self.subtensor.block
@@ -75,10 +80,13 @@ class ValidatorSession:
         
         # If there are less uids than scores, remove some weights.
         queryable_uids = (metagraph.total_stake < 1.024e3)
+        
         bt.logging.info("ip", torch.Tensor([metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in uids]))
+
 
         # Remove the weights of miners that are not queryable.
         queryable_uids = queryable_uids * torch.Tensor([metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in uids])
+
         active_miners = torch.sum(queryable_uids)
         dendrites_per_query = self.total_dendrites_per_query
 
@@ -98,29 +106,44 @@ class ValidatorSession:
         zipped_uids = list(zip(uids, queryable_uids))
         
         filtered_uids = list(zip(*filter(lambda x: x[1], zipped_uids)))
+        bt.logging.info(f"filtered_uids: {filtered_uids}")
+        
         if len(filtered_uids) != 0:
             filtered_uids = filtered_uids[0]
 
         dendrites_to_query = random.sample( filtered_uids, min( dendrites_per_query, len(filtered_uids) ) )
             
-        filtered_axons = [metagraph.axons[i] for i in dendrites_to_query]
-        bt.logging.info(f"filtered_axons: {filtered_axons}")
+        filtered_axons = [metagraph.axons[i] for i in filtered_uids]
+            
         return filtered_axons
 
     def update_scores(self, responses):
+        if(len(responses) == 0 or responses is None):
+            return
+        
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
-        # Update score
-        new_scores = []
         scores = self.scores
-        try:
-            if(len(responses) > 0 and responses is not None):
-                new_scores = calculateScore(responses = responses)
-                bt.logging.info(f"✅ new_scores: {new_scores}")
-        except Exception as e:
-            bt.logging.error(f"❌ Error in twitterScore: {e}")
-        # for i, score_i in enumerate(new_scores):
-        #     scores[dendrites_to_query[i]] = twitterAlpha * scores[dendrites_to_query[i]] + (1 - twitterAlpha) * score_i
-        bt.logging.info(f"\033[92m ✓ Updated Scores: {scores} \033[0m")
+        
+        max_score = torch.max(self.scores)
+        if max_score == 0:
+            max_score = 1
+        
+        min_score = 0
+        recover_rate = 0.2
+        decent_rate = 0.8
+        
+        def update_score(score, value):
+            if value == True:
+                return score + recover_rate * (max_score - score)
+            else:
+                return score - decent_rate * (score - min_score)
+        
+        new_scores = torch.tensor([update_score(score, response) for score, response in zip(scores, responses)])
+        
+        weights = new_scores / torch.sum(new_scores)
+
+
+        bt.logging.info(f"\033[92m ✓ Updated weights: {weights} \033[0m")
         
         # try:
         #     if len(responses) > 0:
@@ -173,6 +196,19 @@ class ValidatorSession:
         # torch.save(scores, scores_file)
         # bt.logging.info(f"Saved weights to \"{self.scores_file}\"")
         
+        
+    def verify_proof_string(self, proof_string):
+
+        try:
+            sqrt_session = SqrtModelSession()
+            res = sqrt_session.verify_proof_string(proof_string)
+            sqrt_session.end()
+            return res
+        except Exception as e:
+            bt.logging.error(f"❌error at verifying", e)
+
+        return False
+    
     def run_one_loop(self):
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
         
@@ -185,8 +221,15 @@ class ValidatorSession:
         self.sync_scores_uids(uids)
         axons = self.get_querable_axons()
         
-        query_input = {"model_id" : [0], "public_inputs":[2,4,9]}
-        bt.logging.info(f"\033[92m 𝕏 ⏩ Sending model_proof query ({query_input}). \033[0m")
+        random_values = [random.randint(1, 100) for _ in range(3)]
+
+        # [AxonInfo( /ipv4/61.221.116.28:8092, 5C5JiwUh9GqYR4FGzcH7CyhqYjtTd7c3HAhTMsZjn4Kyyxu1, 
+        #           5DMHnegFAW82XBhejpNZE4Xg2vHN3ijCwYPD2NWyEcKZTHvp, 620 )]
+
+        query_input = {"model_id" : [0], "public_inputs":random_values}
+        bt.logging.info(f"\033[92m >> Sending model_proof query ({query_input}). \033[0m")
+        bt.logging.info(f"len axons", len(axons))
+
         try:
             responses = dendrite.query(
                 axons,
@@ -196,12 +239,19 @@ class ValidatorSession:
                 deserialize = True, 
                 timeout = 60
             )
-            print("responses", responses.instances)
-            self.update_scores(responses)
+            
+            bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m", len(responses))
+            bt.logging.info(f"\033[92m ✓ response 0 \033[0m", responses[0])
+            bt.logging.info(f"\033[92m ✓ response 2 \033[0m", responses[2])
+            bt.logging.info(f"\033[92m ✓ response 3 \033[0m", responses[3])
+            verif_results = list(map(self.verify_proof_string, responses))
+            bt.logging.info(f"\033[92m ✓ verif_results🗞️. \033[0m", verif_results)
+
+            self.update_scores(verif_results)
             self.step += 1
 
             # Sleep for a duration equivalent to the block time (i.e., time between successive blocks).
-            time.sleep(bt.__blocktime__ * 10)
+            time.sleep(bt.__blocktime__)
         except RuntimeError as e:
             bt.logging.error(e)
             traceback.print_exc()
@@ -247,7 +297,11 @@ class ValidatorSession:
         bt.logging.info(f"Dendrite: {self.dendrite}")
         
         self.metagraph = self.subtensor.metagraph( self.config.netuid )
+
+        self.subnet = bt.metagraph(netuid = self.config.netuid, lite = False)
+        
         self.sync_metagraph()
+        
 
     def sync_metagraph(self):
         self.metagraph.sync(subtensor = self.subtensor)

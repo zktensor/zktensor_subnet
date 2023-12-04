@@ -102,7 +102,8 @@ class MinerSession:
                             f'Emission:{metagraph.E[self.subnet_uid]}')
                     bt.logging.info(log)
                 step += 1
-                time.sleep(1)
+                time.sleep(bt.__blocktime__)
+
 
             # If someone intentionally stops the miner, it'll safely terminate operations.
             except KeyboardInterrupt:
@@ -134,7 +135,6 @@ class MinerSession:
 
         self.metagraph = self.subtensor.metagraph( self.config.netuid )
         self.sync_metagraph()
-        print("axon port", self.config.axon.port)
         
     def sync_metagraph(self):
         self.metagraph.sync(subtensor = self.subtensor)
@@ -152,11 +152,15 @@ class MinerSession:
         else:
             # search_key = [random_line()]
             bt.logging.info(f"picking random model_id and public_inputs: \n")
-            
+        
         # Fetch latest N posts from miner's local database.
         model_session = SqrtModelSession(public_inputs)
-        
-        synapse.query_output = model_session.gen_proof()
+        try:
+            synapse.query_output = model_session.gen_proof()
+        except Exception as e:
+            bt.logging.error(f"❌ error", e)
+
+        model_session.end()
         
         bt.logging.info(f"✅ success: number of response data: {len(synapse.query_output)} \n")
         return synapse

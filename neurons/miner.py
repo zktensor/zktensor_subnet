@@ -20,6 +20,7 @@ def get_config_from_args():
     parser = argparse.ArgumentParser()
     # Adds override arguments for network and netuid.
     parser.add_argument( '--netuid', type = int, default = 1, help = "The chain subnet uid." )
+    parser.add_argument( '--auto-update', default = True, help = "Auto update." )
     # Adds subtensor specific arguments i.e. --subtensor.chain_endpoint ... --subtensor.network ...
     bt.subtensor.add_args(parser)
     # Adds logging specific arguments i.e. --logging.debug ..., --logging.trace .. or --logging.logging_dir ...
@@ -45,6 +46,7 @@ def get_config_from_args():
     )
     # Ensure the directory for logging exists, else create one.
     if not os.path.exists(config.full_path): os.makedirs(config.full_path, exist_ok=True)
+    
     return config
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":

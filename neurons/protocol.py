@@ -30,9 +30,9 @@ class QueryZkProof(bt.Synapse):
     query_input: Optional[Dict] = None
     
     # Optional request output, filled by receiving axon.
-    query_output: Optional[List[Dict]] = None
+    query_output: Optional[str] = None
 
-    def deserialize(self) -> List[Dict]:
+    def deserialize(self) -> str:
         """
         Deserialize the scrap_output into a list of dictionaries.
         """

@@ -16,17 +16,34 @@ THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABI
 OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+import requests
 
 
-def mask_sensitive_data(data: str, visible_chars: int = 5, mask: str = "...") -> str:
-    """
-    Masks sensitive data by showing only a few characters at the start and end.
+    
+def get_remote_version():
+    url = "https://raw.githubusercontent.com/zktensor/zktensor_subnet/main/__init__.py"
+    response = requests.get(url)
 
-    :param data: The sensitive data to be masked.
-    :param visible_chars: The number of characters to show at the start and end. Default is 5.
-    :param mask: The masking string. Default is '...'.
-    :return: The masked data.
-    """
-    if data:
-        return data[:visible_chars] + mask + data[-visible_chars:]
-    return "None"
+    if response.status_code == 200:
+        lines = response.text.split('\n')
+        for line in lines:
+            if line.startswith('__version__'):
+                version_info = line.split('=')[1].strip(' "\'')
+                return version_info
+    else:
+        print("Failed to get file content")
+        return 0
+
+def get_local_version():
+    with open('__init__.py', 'r') as file:
+        lines = file.readlines()
+        for line in lines:
+            if line.startswith('__version__'):
+                version_info = line.split('=')[1].strip(' "\'')
+                return version_info
+    return None
+
+def check_version():
+    pass
+def update_repo():
+    pass
