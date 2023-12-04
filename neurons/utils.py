@@ -47,11 +47,11 @@ def get_local_version():
                 return version_info
     return None
 
-def check_version_same():
+def check_version_updated():
     remote_version = get_remote_version()
     local_version = get_local_version()
     
-    if remote_version == local_version:
+    if version2number(remote_version) > version2number(local_version):
         return True
     else:
         return False
@@ -99,13 +99,16 @@ def handle_merge_conflict(repo):
     except git.GitCommandError as e:
         bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
 
+def version2number(version_string):
+    version_digits = version_string.split(".")
+    return 100 * version_digits[0] + 10 * version_digits[1] + version_digits[2]
 
-            
-    
+def restart_app():
+    python = sys.executable
+    os.execl(python, python, *sys.argv)
+        
 def try_update():
-    if check_version_same() == True:
-        pass
-    else:
+    if check_version_updated() == True:
         bt.logging.info("found the latest version in the repo. try ♻️update...")
         update_repo()
-    
+        restart_app()
