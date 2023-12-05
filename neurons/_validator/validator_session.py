@@ -139,6 +139,7 @@ class ValidatorSession:
 
         for uid, response in responses:
             new_scores[uid] = update_score(self.scores[uid], response)
+        bt.logging.info(f"\033[92m ✓ original scores: {new_scores} \033[0m")
         
         weights = new_scores / torch.sum(new_scores)
 
