@@ -8,5 +8,6 @@ apify_client
 boto3
 ezkl
 onnx
+onnxruntime
 bittensor
 GitPython

@@ -50,7 +50,7 @@ run-miners:
 .PHONY: run-miner
 run-miner: 
 	cd neurons && \
-	python miner.py \
+	pm2 start miner.py --name miner --interpreter python3 -- \
 	--netuid 39 \
 	--axon.port 8092 \
 	--subtensor.network test \
