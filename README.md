@@ -30,7 +30,6 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/opentensor/bitten
 git clone https://github.com/zktensor/zktensor_subnet.git
 cd zktensor_subnet
 python -m pip install -r requirements.txt
-python -m pip install -e .
 ```
 
 # Miner
@@ -39,13 +38,21 @@ A miner receives public inputs from the validator periodically, inference AI mod
 
 ## Prerequisites
 
-For mining you need apify api key. If you don't have one, you can obtain it from the [Apify Settings](https://console.apify.com/account/integrations).
-And also you need to set which actor you're going to use and actor ids.
-You can get actor ids from [Apify Actors](https://console.apify.com/actors/)
+Install pm2
 
-## Configuration with .env
+```bash
+npm i -g pm2
+```
 
-You have to set environment variables in dotenv file. You can use the `.env.example` file as a template.
+Install make
+
+```bash
+sudo apt-get update && sudo apt-get install make
+```
+
+```bash
+cp Makefile.example Makefile
+```
 
 ## Running Miner
 
@@ -68,7 +75,7 @@ run-miner:
 
 ```
 
-And just run
+And just run the following in terminal
 
 ```
 make run-miner
@@ -123,7 +130,7 @@ run-validator:
 
 ```
 
-And just run
+And just run the following in the terminal
 
 ```bash
 make run-validator
