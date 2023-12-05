@@ -29,7 +29,7 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/opentensor/bitten
 ```bash
 git clone https://github.com/zktensor/zktensor_subnet.git
 cd zktensor_subnet
-python -m pip install -r requirements.txt
+python -m pip install . -r requirements.txt
 ```
 
 # Miner
