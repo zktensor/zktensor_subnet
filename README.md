@@ -33,9 +33,9 @@ python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
 
-# Running Miner
+# Miner
 
-A miner receives a query from the validator approximately every minute.
+A miner receives public inputs from the validator periodically, inference AI model and produce the zk proof with its output.
 
 ## Prerequisites
 
@@ -47,16 +47,17 @@ You can get actor ids from [Apify Actors](https://console.apify.com/actors/)
 
 You have to set environment variables in dotenv file. You can use the `.env.example` file as a template.
 
-## Running Miner Script
+## Running Miner
 
-Configure Makefile
+My personal preference to run is using Makefile.
+Visit Makefile in root folder and edit it based on your settings
 
 ```bash
 
 .PHONY: run-miner
 run-miner:
 	cd neurons && \
-	python miner.py \
+	pm2 start --name miner miner.py --interpreter python3 -- \
 	--netuid {net_uid} \
 	--axon.port 8091 \
 	--subtensor.network finney \
@@ -73,10 +74,23 @@ And just run
 make run-miner
 ```
 
-# Running Validator
+Or you can just run this in terminal
+
+```bash
+	cd neurons && \
+	pm2 start --name miner miner.py --interpreter python3 -- \
+	--netuid {net_uid} \
+	--axon.port 8091 \
+	--subtensor.network finney \
+	--wallet.name {your_miner_key_name} \
+	--wallet.hotkey {your_miner_hotkey_name} \
+	--subtensor.chain_endpoint wss://entrypoint-finney.opentensor.ai:443 \
+	--logging.debug
+```
+
+# Validator
 
 Validators perform several key tasks in the data mining process. They issue queries to miners, requesting specific data. Once the data is received, validators compute scores based on factors such as uniqueness, rarity, and volume.
-
 
 Once the data has been scored and verified, it is transferred to a shared storage system on Wasabi S3. Validators then update an indexing table, which is maintained using MongoDB. This table allows validators to efficiently access, search, and fetch data.
 
@@ -89,7 +103,9 @@ Access to the indexing table is secured using an indexing API key, which is prov
    You can get actor ids from [Apify Actors](https://console.apify.com/actors/)
 3. You have to get `WASABI_ACCESS_KEY` and `INDEXING_API_KEY` from subnet owner(gitphantom).
 
-## Running Validator Script
+## Running Validator
+
+visit Makefile in root folder and edit based on your settings
 
 ```bash
 cd neurons
@@ -97,7 +113,7 @@ cd neurons
 .PHONY: run-validator
 run-validator:
 	cd neurons && \
-	python validator.py \
+	pm2 start validator.py --name validator --interpreter python3 -- \
 	--netuid {net_uid} \
 	--subtensor.network finney \
 	--wallet.name {validater_key_name} \
@@ -112,6 +128,8 @@ And just run
 ```bash
 make run-validator
 ```
+
+You can make your own custom Makefile command and uset it based on your activity
 
 ---
 
