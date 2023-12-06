@@ -66,10 +66,10 @@ def update_repo():
 
         # origin.fetch()
         if repo.is_dirty(untracked_files=True):
-            bt.logging.error("update failed: Uncommited changes detected. Please commit changes")
+            bt.logging.error("Update failed: Uncommited changes detected. Please commit changes")
             return False
         try:
-            bt.logging.info("try pulling")
+            bt.logging.info("Try pulling remote repository")
             origin.pull()
             bt.logging.info("pulling success")
             return True
@@ -112,6 +112,8 @@ def restart_app():
     os.execl(python, python, *sys.argv)
     
 def try_update_packages():
+    bt.logging.info("Try updating packages...")
+
     try:
         repo = git.Repo(search_parent_directories=True)
         repo_path = repo.working_tree_dir
