@@ -221,7 +221,7 @@ class ValidatorSession:
         
     
     def verify_proof_string(self, proof_string: str):
-        if proof_string.startswith("An error"):
+        if proof_string != None and proof_string.startswith("An error"):
             print(proof_string)
             
         if proof_string == None:
