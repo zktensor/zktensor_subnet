@@ -32,13 +32,7 @@ cd zktensor_subnet
 python -m pip install -r requirements.txt
 ```
 
-# Miner
-
-Miners contribute to the execution layer in the current version.
-They receive public inputs of the specified model in the deployment layer, generate output and zk proof and return the result.
-Right now, Only a single ZkSqrtRegressionModel is deployed in the deployment layer, miners will be asked to generate proof for the public inputs from the validators. This will not require that much computing power right now.
-
-## Prerequisites
+# Prerequisites
 
 Install pm2
 
@@ -55,6 +49,12 @@ sudo apt-get update && sudo apt-get install make
 ```bash
 cp Makefile.example Makefile
 ```
+
+# Miner
+
+Miners contribute to the execution layer in the current version.
+They receive public inputs of the specified model in the deployment layer, generate output and zk proof and return the result.
+Right now, Only a single ZkSqrtRegressionModel is deployed in the deployment layer, miners will be asked to generate proof for the public inputs from the validators. This will not require that much computing power right now.
 
 ## Running Miner
 
