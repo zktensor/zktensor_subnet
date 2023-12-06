@@ -6,7 +6,6 @@ import traceback
 import bittensor as bt
 import json
 import protocol
-from score.model_score import calculateScore
 import random
 from _miner.miner_session import MinerSession
 
@@ -46,7 +45,7 @@ def get_config_from_args():
     )
     # Ensure the directory for logging exists, else create one.
     if not os.path.exists(config.full_path): os.makedirs(config.full_path, exist_ok=True)
-    
+
     return config
 # The main function parses the configuration and runs the validator.
 if __name__ == "__main__":

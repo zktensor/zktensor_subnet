@@ -6,7 +6,7 @@ import traceback
 import bittensor as bt
 import json
 import protocol
-from score.model_score import calculateScore
+
 import random
 from execution_layer.ZkSqrtModelSession import ZkSqrtModelSession
 
