@@ -100,7 +100,6 @@ class MinerSession:
 
             # If someone intentionally stops the miner, it'll safely terminate operations.
             except KeyboardInterrupt:
-                axon.stop()
                 bt.logging.success('Miner killed by keyboard interrupt.')
                 break
             # In case of unforeseen errors, the miner will log the error and continue operations.
@@ -150,5 +149,5 @@ class MinerSession:
             bt.logging.error(f"error", e)
 
         
-        bt.logging.info(f"✅ success: number of response data: {len(synapse.query_output)} \n")
+        bt.logging.info(f"Proof generation success \n")
         return synapse

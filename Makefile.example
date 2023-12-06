@@ -7,21 +7,21 @@ install:
 run-validator: 
 	cd neurons && \
 	pm2 start validator.py --name validator --interpreter python3 -- \
-	--netuid 39 \
-	--subtensor.network test \
-	--wallet.name test_validator \
-	--wallet.hotkey test_validator_h1 \
-	--subtensor.chain_endpoint wss://test.finney.opentensor.ai:443 \
+	--netuid 28 \
+	--subtensor.network finney \
+	--wallet.name validator_key \
+	--wallet.hotkey validator_hotkey \
+	--subtensor.chain_endpoint wss://entrypoint-finney.opentensor.ai:443 \
 	--logging.debug 
 
 .PHONY: run-miner
 run-miner: 
 	cd neurons && \
 	pm2 start miner.py --name miner --interpreter python3 -- \
-	--netuid 39 \
+	--netuid 28 \
 	--axon.port 8092 \
-	--subtensor.network test \
-	--wallet.name test_miner \
-	--wallet.hotkey test_miner_h2 \
-	--subtensor.chain_endpoint wss://test.finney.opentensor.ai:443 \
+	--subtensor.network finney \
+	--wallet.name miner_key \
+	--wallet.hotkey miner_hotkey \
+	--subtensor.chain_endpoint wss://entrypoint-finney.opentensor.ai:443 \
 	--logging.debug 
