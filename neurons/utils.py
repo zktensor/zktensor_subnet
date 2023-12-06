@@ -45,14 +45,13 @@ def get_local_version():
 def check_version_updated():
     remote_version = get_remote_version()
     local_version = get_local_version()
-    bt.logging.info(f"🔔 remote_version: {remote_version}, local_version: {local_version}")
+    bt.logging.info(f"Version check - remote_version: {remote_version}, local_version: {local_version}")
     
     
     if version2number(remote_version) > version2number(local_version):
-        bt.logging.info(f"👩‍👦update to the latest version is required")
+        bt.logging.info(f"👩‍👦Update to the latest version is required")
         return True
     else:
-        bt.logging.info(f"👩‍👦update is not required")
         return False
 
 def update_repo():

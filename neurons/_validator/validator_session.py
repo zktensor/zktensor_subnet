@@ -9,7 +9,11 @@ import protocol
 from score.model_score import calculateScore
 import random
 import json
-from execution_layer.SqrtModelSession import SqrtModelSession
+
+from rich.table import Table
+from rich.console import Console
+
+from execution_layer.ZkSqrtModelSession import ZkSqrtModelSession
 from utils import try_update
 class ValidatorSession:
     def __init__(self, config):
@@ -63,17 +67,22 @@ class ValidatorSession:
             self.scores = torch.cat((self.scores, new_scores))
             del new_scores
     
-    # If there are less uids than scores, remove some weights.
-    def init_loop_params(self):
+    def init_running_args(self):
+        # Initiate parameters that is used in running the steps
+
         self.step = 0
         self.current_block = self.subtensor.block
             
-        self.total_dendrites_per_query = 25
-        self.minimum_dendrites_per_query = 3
-        self.last_updated_block = self.current_block - (self.current_block % 100)
+        self.last_updated_block = self.current_block - (self.current_block % self.config.blocks_per_epoch)
         self.last_reset_weights_block = self.current_block
+        
 
     def get_querable_uids(self):
+        """Returns the uids of the miners that are queryable
+
+        Returns:
+            _type_: _description_
+        """
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
         uids = metagraph.uids.tolist()
         
@@ -87,20 +96,12 @@ class ValidatorSession:
         queryable_uids = queryable_uids * torch.Tensor([metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in uids])
 
         active_miners = torch.sum(queryable_uids)
-        dendrites_per_query = self.total_dendrites_per_query
 
         # if there are no active miners, set active_miners to 1
         if active_miners == 0:
             active_miners = 1
-        # if there are less than dendrites_per_query * 3 active miners, set dendrites_per_query to active_miners / 3
-        if active_miners < self.total_dendrites_per_query * 3:
-            dendrites_per_query = int(active_miners / 3)
-        else:
-            dendrites_per_query = self.total_dendrites_per_query
-        
-        # less than 3 set to 3
-        if dendrites_per_query < self.minimum_dendrites_per_query:
-                dendrites_per_query = self.minimum_dendrites_per_query
+
+
         # zip uids and queryable_uids, filter only the uids that are queryable, unzip, and get the uids
         zipped_uids = list(zip(uids, queryable_uids))
         
@@ -109,18 +110,22 @@ class ValidatorSession:
         
         if len(filtered_uids) != 0:
             filtered_uids = filtered_uids[0]
-
-        dendrites_to_query = random.sample( filtered_uids, min( dendrites_per_query, len(filtered_uids) ) )
                         
         return filtered_uids
 
     def update_scores(self, responses):
+        """Updates scores based on the response from the miners
+
+        Args:
+            responses (_type_): [(uid, response)] array from the miners
+
+
+        """
         if(len(responses) == 0 or responses is None):
             return
         
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
         new_scores = self.scores[:]
-        
         max_score = torch.max(self.scores)
         if max_score == 0:
             max_score = 1
@@ -135,56 +140,79 @@ class ValidatorSession:
             else:
                 return score - decent_rate * (score - min_score)
         
-        # new_scores = torch.tensor([update_score(score, response) for score, response in zip(scores, responses)])
-
         for uid, response in responses:
             new_scores[uid] = update_score(self.scores[uid], response)
-        bt.logging.info(f"\033[92m ✓ original scores: {new_scores} \033[0m")
         
-        weights = new_scores / torch.sum(new_scores)
-
-
-        bt.logging.info(f"\033[92m ✓ Updated weights: {weights} \033[0m")
         self.scores = new_scores
+        self.log_scores()
+        
         
         self.current_block = subtensor.block
-        if self.current_block - self.last_updated_block > 100:
-            weights = self.scores / torch.sum(self.scores)
-            bt.logging.info(f"Setting weights: {weights}")
-            # Miners with higher scores (or weights) receive a larger share of TAO rewards on this subnet.
-            (
-                processed_uids,
-                processed_weights,
-            ) = bt.utils.weight_utils.process_weights_for_netuid(
-                uids=metagraph.uids,
-                weights=weights,
-                netuid=self.config.netuid,
-                subtensor=subtensor
-            )
-            bt.logging.info(f"Processed weights: {processed_weights}")
-            bt.logging.info(f"Processed uids: {processed_uids}")
-            result = subtensor.set_weights(
-                netuid = self.config.netuid, # Subnet to set weights on.
-                wallet = wallet, # Wallet to sign set weights using hotkey.
-                uids = processed_uids, # Uids of the miners to set weights for.
-                weights = processed_weights, # Weights to set for the miners.
-            )
-            self.last_updated_block = self.current_block
-            if result: bt.logging.success('✅ Successfully set weights.')
-            else: bt.logging.error('Failed to set weights.')
-            
-        # Resync our local state with the latest state from the blockchain.
-        # metagraph = subtensor.metagraph(self.config.netuid)
+        if self.current_block - self.last_updated_block > self.config.blocks_per_epoch:
+            self.update_weights()            
+
         
-        # torch.save(scores, scores_file)
-        # bt.logging.info(f"Saved weights to \"{self.scores_file}\"")
+    def update_weights(self):
+        wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
         
+        weights = self.scores / torch.sum(self.scores)
+        bt.logging.info(f"Setting weights: {weights}")
+        # Miners with higher scores (or weights) receive a larger share of TAO rewards on this subnet.
+        (
+            processed_uids,
+            processed_weights,
+        ) = bt.utils.weight_utils.process_weights_for_netuid(
+            uids=metagraph.uids,
+            weights=weights,
+            netuid=self.config.netuid,
+            subtensor=subtensor
+        )
+        bt.logging.info(f"Processed weights: {processed_weights}")
+        bt.logging.info(f"Processed uids: {processed_uids}")
+
+        result = subtensor.set_weights(
+            netuid = self.config.netuid, # Subnet to set weights on.
+            wallet = wallet, # Wallet to sign set weights using hotkey.
+            uids = processed_uids, # Uids of the miners to set weights for.
+            weights = processed_weights, # Weights to set for the miners.
+        )
         
+        self.weights = weights
+        self.log_weights()
+        
+        self.last_updated_block = metagraph.block.item()
+        
+        if result: bt.logging.success('✅ Successfully set weights.')
+        else: bt.logging.error('Failed to set weights.')
+
+    def log_scores(self):
+        table = Table(title="scores")
+        table.add_column("uid", justify="right", style="cyan", no_wrap=True)
+        table.add_column("score", justify="right", style="magenta", no_wrap=True)
+
+        for uid, score in enumerate(self.scores):
+            table.add_row(str(uid), str(round(score.item(), 4)))
+        
+        console = Console()
+        console.print(table)
+        
+    def log_weights(self):
+        table = Table(title="weights")
+        table.add_column("uid", justify="right", style="cyan", no_wrap=True)
+        table.add_column("weight", justify="right", style="magneta", no_wrap=True)
+
+        for uid, score in enumerate(self.weights):
+            table.add_row(str(uid), str(round(score.item(), 4)))
+        
+        console = Console()
+        console.print(table)
+        
+    
     def verify_proof_string(self, proof_string):
         if proof_string == None:
             return False
         try:
-            sqrt_session = SqrtModelSession()
+            sqrt_session = ZkSqrtModelSession()
             print("model created", sqrt_session.proof_path)
             res = sqrt_session.verify_proof_string(proof_string)
             sqrt_session.end()
@@ -194,12 +222,8 @@ class ValidatorSession:
 
         return False
     
-    def run_one_loop(self):
+    def run_step(self):
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
-        
-        if self.step % 5 == 0:
-            metagraph.sync(subtensor = subtensor)
-            bt.logging.info(f"🔄 Syncing metagraph with subtensor.")
 
         # Get the uids of all miners in the network.
         uids = metagraph.uids.tolist()
@@ -230,7 +254,7 @@ class ValidatorSession:
             
             bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m")
             verif_results = list(map(self.verify_proof_string, responses))
-            bt.logging.info("👨‍🚒result with uids", list(zip(filtered_uids, verif_results)))
+
             self.update_scores(list(zip(filtered_uids, verif_results)))
             self.step += 1
 
@@ -248,18 +272,27 @@ class ValidatorSession:
             exit()
             
     def run(self):
-        
+        bt.logging.debug("Validator started its running loop")
+                
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
-    
+        
         self.init_scores()
-        self.init_loop_params()
+        self.init_running_args()
 
         while True:
-             # If we encounter an unexpected error, log it for debugging.
-            if self.config.auto_update == True:
-                try_update()
-            self.run_one_loop()
-            
+            try:
+                if self.config.auto_update == True:
+                    try_update()    
+                self.sync_metagraph()
+                self.run_step()
+                
+            except KeyboardInterrupt:
+                bt.logging.info("KeyboardInterrupt caught. Exiting validator.")
+                exit()
+
+            except Exception as e:
+                bt.logging.error(f"Error in validator loop \n {e} \n {traceback.format_exc()}")
+                    
             
     def check_register(self):
         if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:
@@ -272,19 +305,11 @@ class ValidatorSession:
             self.subnet_uid = subnet_uid
         
     def configure(self):
+        #=== Configure Bittensor objects ====
         self.wallet = bt.wallet( config = self.config )
-        bt.logging.info(f"Wallet: {self.wallet}")
-
-        # The subtensor is our connection to the Bittensor blockchain.
         self.subtensor = bt.subtensor( config = self.config )
-        bt.logging.info(f"Subtensor: {self.subtensor}")
-
-        # Dendrite is the RPC client; it lets us send messages to other nodes (axons) in the network.
         self.dendrite = bt.dendrite( wallet = self.wallet )
-        bt.logging.info(f"Dendrite: {self.dendrite}")
-        
         self.metagraph = self.subtensor.metagraph( self.config.netuid )
-
         self.subnet = bt.metagraph(netuid = self.config.netuid, lite = False)
         
         self.sync_metagraph()
@@ -292,5 +317,4 @@ class ValidatorSession:
 
     def sync_metagraph(self):
         self.metagraph.sync(subtensor = self.subtensor)
-        bt.logging.info(f"Sync Metagraph: {self.metagraph}")
     

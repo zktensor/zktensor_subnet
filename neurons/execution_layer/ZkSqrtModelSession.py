@@ -8,8 +8,8 @@ import json
 import ezkl
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-print("🌓dir_path", dir_path)
-class SqrtModelSession:
+
+class ZkSqrtModelSession:
 
     def __init__(self, public_inputs = []):
         self.model_id = 0

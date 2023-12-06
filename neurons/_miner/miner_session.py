@@ -8,7 +8,8 @@ import json
 import protocol
 from score.model_score import calculateScore
 import random
-from execution_layer.SqrtModelSession import SqrtModelSession
+from execution_layer.ZkSqrtModelSession import ZkSqrtModelSession
+
 from utils import try_update
 
 class MinerSession:
@@ -129,19 +130,14 @@ class MinerSession:
             self.subnet_uid = subnet_uid
         
     def configure(self):
+        # === Configure Bittensor objects ====
         self.wallet = bt.wallet( config = self.config )
-        bt.logging.info(f"Wallet: {self.wallet}")
-
-        # The subtensor is our connection to the Bittensor blockchain.
         self.subtensor = bt.subtensor( config = self.config )
-        bt.logging.info(f"Subtensor: {self.subtensor}")
-
         self.metagraph = self.subtensor.metagraph( self.config.netuid )
         self.sync_metagraph()
         
     def sync_metagraph(self):
         self.metagraph.sync(subtensor = self.subtensor)
-        bt.logging.info(f"Sync Metagraph: {self.metagraph}")
     
     def queryZkProof(self,  synapse: protocol.QueryZkProof) -> protocol.QueryZkProof: 
         """
@@ -157,13 +153,13 @@ class MinerSession:
             bt.logging.info(f"picking random model_id and public_inputs: \n")
         
         # Fetch latest N posts from miner's local database.
-        model_session = SqrtModelSession(public_inputs)
         try:
+            model_session = ZkSqrtModelSession(public_inputs)
             synapse.query_output = model_session.gen_proof()
+            model_session.end()
         except Exception as e:
             bt.logging.error(f"❌ error", e)
 
-        model_session.end()
         
         bt.logging.info(f"✅ success: number of response data: {len(synapse.query_output)} \n")
         return synapse
