@@ -23,7 +23,11 @@ import os
 import torch
 import git
 from __init__ import __version__
-    
+import subprocess
+
+def version2number(version):
+    return int(version.replace('.', '').replace('-', '').replace('_', ''))
+
 def get_remote_version():
     url = "https://raw.githubusercontent.com/zktensor/zktensor_subnet/main/neurons/__init__.py"
     response = requests.get(url)
@@ -57,10 +61,9 @@ def check_version_updated():
 def update_repo():
     try:
         repo = git.Repo(search_parent_directories=True)
-        repo_path = repo.working_tree_dir
-        print("repo_path", repo_path)
+        
         origin = repo.remotes.origin
-        print("origin", origin)
+
         # origin.fetch()
         if repo.is_dirty(untracked_files=True):
             bt.logging.error("update failed: Uncommited changes detected. Please commit changes")
@@ -68,13 +71,12 @@ def update_repo():
         try:
             bt.logging.info("try pulling")
             origin.pull()
-            bt.logging.info("try pulling success")
+            bt.logging.info("pulling success")
             return True
         except git.exc.GitCommandError as e:
             bt.logging.info(f"update : Merge conflict detected: {e} Recommend you manually commit changes and update")
             return handle_merge_conflict(repo)
         
-        bt.logging.info("✅ Repo update success")
     except Exception as e:
         bt.logging.error(f"update failed: {e} Recommend you manually commit changes and update")
     
@@ -109,12 +111,27 @@ def restart_app():
     python = sys.executable
     os.execl(python, python, *sys.argv)
     
+def try_update_packages():
+    try:
+        repo = git.Repo(search_parent_directories=True)
+        repo_path = repo.working_tree_dir
+        
+        requirements_path = os.path.join(repo_path, "requirements.txt")
+        
+        python_executable = sys.executable
+        subprocess.check_call([python_executable], "-m", "pip", "install", "-r", requirements_path)
+        bt.logging.info("📦Updating packages finished.")
+        
+    except Exception as e:
+        bt.logging.info(f"Updating packages failed {e}")
+    
 def try_update():
     try:
         if check_version_updated() == True:
             bt.logging.info("found the latest version in the repo. try ♻️update...")
             if update_repo() == True:
+                try_update_packages()
                 restart_app()
             
     except Exception as e:
-        bt.logging.info(f"{e}")
+        bt.logging.info(f"Try updating failed {e}")

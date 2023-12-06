@@ -106,7 +106,7 @@ class ValidatorSession:
         zipped_uids = list(zip(uids, queryable_uids))
         
         filtered_uids = list(zip(*filter(lambda x: x[1], zipped_uids)))
-        bt.logging.info(f"filtered_uids: {filtered_uids}")
+        bt.logging.debug(f"filtered_uids: {filtered_uids}")
         
         if len(filtered_uids) != 0:
             filtered_uids = filtered_uids[0]
@@ -143,7 +143,8 @@ class ValidatorSession:
         for uid, response in responses:
             new_scores[uid] = update_score(self.scores[uid], response)
         
-        self.scores = new_scores
+        self.scores = self.scores / torch.sum(self.scores)
+
         self.log_scores()
         
         
