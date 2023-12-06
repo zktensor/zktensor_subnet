@@ -213,7 +213,6 @@ class ValidatorSession:
             return False
         try:
             sqrt_session = ZkSqrtModelSession()
-            print("model created", sqrt_session.proof_path)
             res = sqrt_session.verify_proof_string(proof_string)
             sqrt_session.end()
             return res
@@ -240,7 +239,6 @@ class ValidatorSession:
 
         query_input = {"model_id" : [0], "public_inputs":random_values}
         bt.logging.info(f"\033[92m >> Sending model_proof query ({query_input}). \033[0m")
-        bt.logging.info(f"len axons", len(filtered_axons))
 
         try:
             responses = dendrite.query(
