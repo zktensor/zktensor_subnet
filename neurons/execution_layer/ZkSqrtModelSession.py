@@ -105,10 +105,11 @@ class ZkSqrtModelSession:
         
     # generate the proof of the model
     def gen_proof(self):
-        self.run_model()
-        self.gen_input_file()
-        self.gen_witness()
+  
         try:
+            self.run_model()
+            self.gen_input_file()
+            self.gen_witness()
             ezkl.prove(
                 self.witness_path,
                 self.circuit_path,
