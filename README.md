@@ -29,12 +29,14 @@ $ /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/opentensor/bitten
 ```bash
 git clone https://github.com/zktensor/zktensor_subnet.git
 cd zktensor_subnet
-python -m pip install . -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
 # Miner
 
-A miner receives public inputs from the validator periodically, inference AI model and produce the zk proof with its output.
+Miners contribute to the execution layer in the current version.
+They receive public inputs of the specified model in the deployment layer, generate output and zk proof and return the result.
+Right now, Only a single ZkSqrtRegressionModel is deployed in the deployment layer, miners will be asked to generate proof for the public inputs from the validators. This will not require that much computing power right now.
 
 ## Prerequisites
 
@@ -97,18 +99,7 @@ Or you can just run this in terminal
 
 # Validator
 
-Validators perform several key tasks in the data mining process. They issue queries to miners, requesting specific data. Once the data is received, validators compute scores based on factors such as uniqueness, rarity, and volume.
-
-Once the data has been scored and verified, it is transferred to a shared storage system on Wasabi S3. Validators then update an indexing table, which is maintained using MongoDB. This table allows validators to efficiently access, search, and fetch data.
-
-Access to the indexing table is secured using an indexing API key, which is provided via an indexing endpoint. This ensures that only authorized validators can access and manipulate the stored data.
-
-## Prerequisites
-
-1. For validating you need apify api key. If you don't have one, you can obtain it from the [Apify Settings](https://console.apify.com/account/integrations).
-2. And also you need to set which actor you're going to use and actor ids.
-   You can get actor ids from [Apify Actors](https://console.apify.com/actors/)
-3. You have to get `WASABI_ACCESS_KEY` and `INDEXING_API_KEY` from subnet owner(gitphantom).
+Validators send public inputs of the specified model(which is deployed in deployment layer) to the miners, and verify the output and proof returned from the miners, update weights based on the verificaton results.
 
 ## Running Validator
 
@@ -162,6 +153,3 @@ This repository is licensed under the MIT License.
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 ```
-
-python miner.py --wallet.name test_miner --wallet.hotkey test_miner_1 --subtensor.network test --netuid 18
-python validator.py --wallet.name test_validator --wallet.hotkey test_validator_1 --subtensor.network test --netuid 18

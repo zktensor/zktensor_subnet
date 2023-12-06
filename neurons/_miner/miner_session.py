@@ -50,12 +50,14 @@ class MinerSession:
         bt.logging.info(f"Starting axon server on port: {self.config.axon.port}")
         axon.start()
 
-        # Keep the miner alive
-        # This loop maintains the miner's operations until intentionally stopped.
-        bt.logging.info(f"Starting main loop")
         self.axon = axon
         
     def run(self):
+        """Keep the miner alive. his loop maintains the miner's operations until intentionally stopped.
+        
+        """
+
+        bt.logging.info(f"Starting main loop")
         wallet, metagraph, subtensor = self.unpack_bt_objects()
         
         self.start_axon()
@@ -75,21 +77,8 @@ class MinerSession:
                     try:
                         for _uid, axon in enumerate(metagraph.axons):
                             if axon.hotkey == wallet.hotkey.ss58_address:
-                                # uid = axon.uid
-                                # uid doesnt exist ona xon
                                 uid = _uid
                                 break
-                        if uid is not None:
-                            # 0 weights for all uids
-                            weights = torch.Tensor([0.0] * len(metagraph.uids))
-                            # 1 weight for uid
-                            weights[uid] = 1.0
-                            (uids, processed_weights) = bt.utils.weight_utils.process_weights_for_netuid( uids = metagraph.uids, weights = weights, netuid=self.config.netuid, subtensor = subtensor)
-                            subtensor.set_weights(wallet = wallet, netuid = self.config.netuid, weights = processed_weights, uids = uids)
-                            last_updated_block = subtensor.block
-                            bt.logging.trace("Miner weight set!")
-                        else:
-                            bt.logging.warning(f"Could not find uid with hotkey {self.config.wallet.hotkey} to set weight")
                     except Exception as e:
                         bt.logging.warning(f"Could not set miner weight: {e}")
                         raise e
@@ -158,7 +147,7 @@ class MinerSession:
             synapse.query_output = model_session.gen_proof()
             model_session.end()
         except Exception as e:
-            bt.logging.error(f"❌ error", e)
+            bt.logging.error(f"error", e)
 
         
         bt.logging.info(f"✅ success: number of response data: {len(synapse.query_output)} \n")

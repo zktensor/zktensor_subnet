@@ -23,8 +23,8 @@ import bittensor as bt
 
 class QueryZkProof(bt.Synapse):
     """
-    TwitterScrap class inherits from bt.Synapse.
-    It is used to scrape data from Twitter.
+    QueryZkProof class inherits from bt.Synapse.
+    It is used to query zkproof of certain model.
     """
     # Required request input, filled by sending dendrite caller.
     query_input: Optional[Dict] = None
@@ -34,20 +34,18 @@ class QueryZkProof(bt.Synapse):
 
     def deserialize(self) -> str:
         """
-        Deserialize the scrap_output into a list of dictionaries.
+        unpack query_output
         """
-        # TODO: Add error handling for when scrap_output is None
         return self.query_output
 
 class CheckMiner(bt.Synapse):
     """
     CheckMiner class inherits from bt.Synapse.
-    It is used to check the miner's status.
+    It is used to check the miner's status. This is not used yet.
     """
     # Required request input, send url_hash for check
     check_url_hash: str
 
-    # Return response with tweet searched by url_hash
     # TODO: Add error handling for when check_output is None
     check_output: Optional[Dict] = None
 

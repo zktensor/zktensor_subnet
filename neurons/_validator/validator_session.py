@@ -6,9 +6,7 @@ import traceback
 import bittensor as bt
 import json
 import protocol
-from score.model_score import calculateScore
 import random
-import json
 
 from rich.table import Table
 from rich.console import Console
@@ -88,9 +86,6 @@ class ValidatorSession:
         
         # If there are less uids than scores, remove some weights.
         queryable_uids = (metagraph.total_stake < 1.024e3)
-        
-        bt.logging.info("ip", torch.Tensor([metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in uids]))
-
 
         # Remove the weights of miners that are not queryable.
         queryable_uids = queryable_uids * torch.Tensor([metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in uids])
@@ -196,7 +191,18 @@ class ValidatorSession:
         
         console = Console()
         console.print(table)
+
+    def log_verify_result(self, results):
+        table = Table(title="proof verification result")
+        table.add_column("uid", justify="right", style="cyan", no_wrap=True)
+        table.add_column("Verified?", justify="right", style="magenta", no_wrap=True)
+        for uid, result in results:
+            table.add_row(str(uid), str(result))
+
         
+        console = Console()
+        console.print(table)
+
     def log_weights(self):
         table = Table(title="weights")
         table.add_column("uid", justify="right", style="cyan", no_wrap=True)
@@ -244,8 +250,7 @@ class ValidatorSession:
         try:
             responses = dendrite.query(
                 filtered_axons,
-                # Construct a scraping query.
-                protocol.QueryZkProof(query_input = query_input), # Construct a scraping query.
+                protocol.QueryZkProof(query_input = query_input), 
                 # All responses have the deserialize function called on them before returning.
                 deserialize = True, 
                 timeout = 60
@@ -254,7 +259,9 @@ class ValidatorSession:
             bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m")
             verif_results = list(map(self.verify_proof_string, responses))
 
+            self.log_verify_result(list(zip(filtered_uids, verif_results)))
             self.update_scores(list(zip(filtered_uids, verif_results)))
+
             self.step += 1
 
             # Sleep for a duration equivalent to the block time (i.e., time between successive blocks).
