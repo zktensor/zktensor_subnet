@@ -220,7 +220,10 @@ class ValidatorSession:
         console.print(table)
         
     
-    def verify_proof_string(self, proof_string):
+    def verify_proof_string(self, proof_string: str):
+        if proof_string.startswith("An error"):
+            print(proof_string)
+            
         if proof_string == None:
             return False
         try:
