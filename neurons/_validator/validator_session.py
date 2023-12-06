@@ -126,7 +126,7 @@ class ValidatorSession:
             max_score = 1
         
         min_score = 0
-        recover_rate = 0.2
+        recover_rate = 0.5
         decent_rate = 0.8
         
         def update_score(score, value):
@@ -138,10 +138,10 @@ class ValidatorSession:
         for uid, response in responses:
             new_scores[uid] = update_score(self.scores[uid], response)
         
-        self.scores = self.scores / torch.sum(self.scores)
+        if torch.sum(self.scores).item() != 0:
+            self.scores = self.scores / torch.sum(self.scores)
 
         self.log_scores()
-        
         
         self.current_block = subtensor.block
         if self.current_block - self.last_updated_block > self.config.blocks_per_epoch:
@@ -150,8 +150,13 @@ class ValidatorSession:
         
     def update_weights(self):
         wallet, metagraph, subtensor, dendrite = self.unpack_bt_objects()
+
+        if torch.sum(self.scores).item() != 0:
+            weights = self.scores / torch.sum(self.scores)
+        else:
+            weights = self.scores
         
-        weights = self.scores / torch.sum(self.scores)
+        
         bt.logging.info(f"Setting weights: {weights}")
         # Miners with higher scores (or weights) receive a larger share of TAO rewards on this subnet.
         (
