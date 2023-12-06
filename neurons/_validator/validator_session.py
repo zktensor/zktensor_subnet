@@ -258,7 +258,7 @@ class ValidatorSession:
                 protocol.QueryZkProof(query_input = query_input), 
                 # All responses have the deserialize function called on them before returning.
                 deserialize = True, 
-                timeout = 60
+                timeout = 200
             )
             
             bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m")
