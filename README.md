@@ -56,6 +56,22 @@ Miners contribute to the execution layer in the current version.
 They receive public inputs of the specified model in the deployment layer, generate output and zk proof and return the result.
 Right now, Only a single ZkSqrtRegressionModel is deployed in the deployment layer, miners will be asked to generate proof for the public inputs from the validators. This will not require that much computing power right now.
 
+## Hardware requirements
+
+Minimum requirement:
+
+- RAM: 4GB
+- Network: 1GB
+- Storage: 50GB
+- VRAM: 4GB
+
+Recommended requirement:
+
+- RAM: 16GB
+- Network: 1GB
+- Storage: 300GB
+- VRAM: 8GB
+
 ## Running Miner
 
 My personal preference to run is using Makefile.
@@ -100,6 +116,20 @@ Or you can just run this in terminal
 # Validator
 
 Validators send public inputs of the specified model(which is deployed in deployment layer) to the miners, and verify the output and proof returned from the miners, update weights based on the verificaton results.
+
+## Hardware requirements
+
+Minimum requirement:
+
+- RAM: 4GB
+- Network: 1GB
+- Storage: 50GB
+
+Recommended requirement:
+
+- RAM: 16GB
+- Network: 1GB
+- Storage: 300GB
 
 ## Running Validator
 
