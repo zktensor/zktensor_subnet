@@ -200,7 +200,7 @@ class ValidatorSession:
     def log_weights(self):
         table = Table(title="weights")
         table.add_column("uid", justify="right", style="cyan", no_wrap=True)
-        table.add_column("weight", justify="right", style="magneta", no_wrap=True)
+        table.add_column("weight", justify="right", style="magenta", no_wrap=True)
 
         for uid, score in enumerate(self.weights):
             table.add_row(str(uid), str(round(score.item(), 4)))
