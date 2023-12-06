@@ -221,7 +221,6 @@ class ValidatorSession:
         
     
     def verify_proof_string(self, proof_string):
-        print("proof_string_len", len(proof_string))
         if proof_string == None:
             return False
         try:

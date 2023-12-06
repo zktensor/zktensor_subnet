@@ -126,7 +126,7 @@ class ZkSqrtModelSession:
         
         except Exception as e:
             print(f"An error occured: {e}")
-            return False
+            return f"An error occured on miner proof: {e}"
 
     def verify_proof(self):        
         res = ezkl.verify(
