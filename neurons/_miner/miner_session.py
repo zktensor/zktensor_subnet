@@ -146,6 +146,8 @@ class MinerSession:
             synapse.query_output = model_session.gen_proof()
             model_session.end()
         except Exception as e:
+            synapse.query_output = "An error occured"
+            
             bt.logging.error(f"error", e)
 
         
