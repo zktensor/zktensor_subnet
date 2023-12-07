@@ -248,7 +248,7 @@ class ValidatorSession:
             return res
         except Exception as e:
             bt.logging.error(f"❌error at verifying", e)
-            print("proof_string", proof_string)
+            print("proof_string for error", proof_string)
 
         return False
     

@@ -106,6 +106,7 @@ class ZkSqrtModelSession:
         
         with open(self.proof_path, 'w') as f:
             f.write(proof_string)
+            f.close()
         
     # generate the proof of the model
     def gen_proof(self):
@@ -149,7 +150,6 @@ class ZkSqrtModelSession:
         if proof_string == None:
             return False
         self.gen_proof_file(proof_string)
-        print("proof file generated successfully")
         return self.verify_proof()
         
     def __enter__(self):
