@@ -255,7 +255,7 @@ class ValidatorSession:
         self.sync_scores_uids(uids)
 
         filtered_uids = self.get_querable_uids()
-        filtered_uids = [135]
+        # filtered_uids = [134] # for debug
         filtered_axons = [metagraph.axons[i] for i in filtered_uids]
         
         random_values = [random.randint(1, 100) for _ in range(3)]

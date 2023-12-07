@@ -107,13 +107,9 @@ class ZkSqrtModelSession:
     def gen_proof(self):
   
         try:
-            print("gen_proof started")
             self.run_model()
-            print("run_model finished")
             self.gen_input_file()
-            print("gen_input finished")
             self.gen_witness()
-            print("gen_witness finished")
             
             ezkl.prove(
                 self.witness_path,
@@ -125,7 +121,6 @@ class ZkSqrtModelSession:
                 "single",
                 # self.settings_path,
             )
-            print("prove finished")
             
             with open(self.proof_path, 'r') as f:
                 proof_content = f.read()
