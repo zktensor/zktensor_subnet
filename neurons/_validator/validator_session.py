@@ -138,6 +138,11 @@ class ValidatorSession:
             else:
                 return score - decent_rate * (score - min_score)
         
+        all_uids = set(range(len(self.scores)))
+        response_uids = set(uid for uid, _ in responses)
+        missing_uids = all_uids - response_uids
+        responses.extend((uid, False) for uid in missing_uids)
+        
         for uid, response in responses:
             new_scores[uid] = update_score(self.scores[uid], response)
         
@@ -255,6 +260,7 @@ class ValidatorSession:
         self.sync_scores_uids(uids)
 
         filtered_uids = self.get_querable_uids()
+        
         # filtered_uids = [134] # for debug
         filtered_axons = [metagraph.axons[i] for i in filtered_uids]
         
