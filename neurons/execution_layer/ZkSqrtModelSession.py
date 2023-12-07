@@ -100,6 +100,10 @@ class ZkSqrtModelSession:
             )
 
     def gen_proof_file(self, proof_string):
+        dir_name = os.path.dirname(self.proof_path)
+        # Create the directory if it doesn't exist
+        os.makedirs(dir_name, exist_ok=True)
+        
         with open(self.proof_path, 'w') as f:
             f.write(proof_string)
         
