@@ -255,7 +255,7 @@ class ValidatorSession:
         self.sync_scores_uids(uids)
 
         filtered_uids = self.get_querable_uids()
-        
+        filtered_uids = [135]
         filtered_axons = [metagraph.axons[i] for i in filtered_uids]
         
         random_values = [random.randint(1, 100) for _ in range(3)]
@@ -272,9 +272,8 @@ class ValidatorSession:
                 protocol.QueryZkProof(query_input = query_input), 
                 # All responses have the deserialize function called on them before returning.
                 deserialize = True, 
-                timeout = 60
+                timeout = 300
             )
-            bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m")
 
             verif_results = list(map(self.verify_proof_string, responses))
 

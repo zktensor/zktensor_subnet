@@ -143,6 +143,7 @@ class MinerSession:
         # Fetch latest N posts from miner's local database.
         try:
             model_session = ZkSqrtModelSession(public_inputs)
+            bt.logging.debug(f"ModelSession created succesfully")
             synapse.query_output = model_session.gen_proof()
             model_session.end()
         except Exception as e:
