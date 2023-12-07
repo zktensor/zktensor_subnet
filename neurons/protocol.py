@@ -32,7 +32,7 @@ class QueryZkProof(bt.Synapse):
     # Optional request output, filled by receiving axon.
     query_output: Optional[str] = None
 
-    def deserialize(self) -> str:
+    def deserialize(self: bt.Synapse) -> str:
         """
         unpack query_output
         """

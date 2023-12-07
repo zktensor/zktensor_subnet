@@ -43,16 +43,19 @@ class ValidatorSession:
         # except:
         #     scores = torch.zeros_like(self.metagraph.S, dtype=torch.float32)
         #     bt.logging.info(f"Initialized all scores to 0")
-        
-        scores = torch.zeros_like(self.metagraph.S, dtype=torch.float32)
-        
-        weights = self.subnet.W
 
-        # all nodes with more than 1e3 total stake are set to 0 (sets validators weights to 0)
-        scores = scores * (self.metagraph.total_stake < 1.024e3)
-        # set all nodes without ips set to 0
-        scores = scores * torch.Tensor([self.metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in self.metagraph.uids])
-        self.scores = scores
+        try:
+            self.scores = torch.load("scores.pt")
+        except Exception as e:
+            scores = torch.zeros_like(self.metagraph.S, dtype=torch.float32)
+
+            # set all nodes without ips set to 0
+            scores = scores * torch.Tensor([self.metagraph.neurons[uid].axon_info.ip != '0.0.0.0' for uid in self.metagraph.uids])
+            self.scores = scores
+        
+        bt.logging.info("Succesfully init scores")
+        
+        self.log_scores()
         return self.scores
     
     def sync_scores_uids(self, uids):
@@ -126,7 +129,7 @@ class ValidatorSession:
             max_score = 1
         
         min_score = 0
-        recover_rate = 0.5
+        recover_rate = 0.2
         decent_rate = 0.8
         
         def update_score(score, value):
@@ -142,7 +145,7 @@ class ValidatorSession:
             self.scores = self.scores / torch.sum(self.scores)
 
         self.log_scores()
-        
+        self.try_store_scores()
         self.current_block = subtensor.block
         if self.current_block - self.last_updated_block > self.config.blocks_per_epoch:
             self.update_weights()            
@@ -197,6 +200,13 @@ class ValidatorSession:
         console = Console()
         console.print(table)
 
+    def try_store_scores(self):
+        try:
+            torch.save(self.scores, "scores.pt")
+        except Exception as e:
+            bt.logging.info(f"Error at storing scores {e}")
+  
+            
     def log_verify_result(self, results):
         table = Table(title="proof verification result")
         table.add_column("uid", justify="right", style="cyan", no_wrap=True)
@@ -221,8 +231,8 @@ class ValidatorSession:
         
     
     def verify_proof_string(self, proof_string: str):
-        if proof_string != None and proof_string.startswith("An error"):
-            print(proof_string)
+        # if proof_string != None and proof_string.startswith("An error"):
+        #     print(proof_string)
             
         if proof_string == None:
             return False
@@ -233,6 +243,7 @@ class ValidatorSession:
             return res
         except Exception as e:
             bt.logging.error(f"❌error at verifying", e)
+            print("proof_string", proof_string)
 
         return False
     
@@ -261,13 +272,14 @@ class ValidatorSession:
                 protocol.QueryZkProof(query_input = query_input), 
                 # All responses have the deserialize function called on them before returning.
                 deserialize = True, 
-                timeout = 200
+                timeout = 60
             )
-            
             bt.logging.info(f"\033[92m ✓ responses arrived. \033[0m")
+
             verif_results = list(map(self.verify_proof_string, responses))
 
             self.log_verify_result(list(zip(filtered_uids, verif_results)))
+            
             self.update_scores(list(zip(filtered_uids, verif_results)))
 
             self.step += 1

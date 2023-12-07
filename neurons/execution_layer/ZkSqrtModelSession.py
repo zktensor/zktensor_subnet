@@ -107,6 +107,7 @@ class ZkSqrtModelSession:
     def gen_proof(self):
   
         try:
+            print("gen_proof started")
             self.run_model()
             self.gen_input_file()
             self.gen_witness()

@@ -66,7 +66,7 @@ class MinerSession:
         last_updated_block = subtensor.block - 100
         
         while True:
-            if self.config.auto_update == True:
+            if step % 10 == 0 and self.config.auto_update == True:
                 try_update()          
             try:
                 if subtensor.block - last_updated_block >= 100:
@@ -95,7 +95,7 @@ class MinerSession:
                             f'Emission:{metagraph.E[self.subnet_uid]}')
                     bt.logging.info(log)
                 step += 1
-                time.sleep(bt.__blocktime__)
+                time.sleep(1)
 
 
             # If someone intentionally stops the miner, it'll safely terminate operations.
