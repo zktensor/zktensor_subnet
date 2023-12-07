@@ -278,7 +278,7 @@ class ValidatorSession:
                 protocol.QueryZkProof(query_input = query_input), 
                 # All responses have the deserialize function called on them before returning.
                 deserialize = True, 
-                timeout = 300
+                timeout = 100
             )
 
             verif_results = list(map(self.verify_proof_string, responses))

@@ -145,6 +145,7 @@ class ZkSqrtModelSession:
         if proof_string == None:
             return False
         self.gen_proof_file(proof_string)
+        print("proof file generated successfully")
         return self.verify_proof()
         
     def __enter__(self):
