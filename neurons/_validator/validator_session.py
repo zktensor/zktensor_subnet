@@ -139,12 +139,13 @@ class ValidatorSession:
                 return score - decent_rate * (score - min_score)
         
         all_uids = set(range(len(self.scores)))
-        response_uids = set(uid for uid, _ in responses)
+        response_uids = set(uid for uid, _, _ in responses)
         missing_uids = all_uids - response_uids
-        responses.extend((uid, False) for uid in missing_uids)
+
+        responses.extend((uid, False, 1) for uid in missing_uids)
         
-        for uid, response in responses:
-            new_scores[uid] = update_score(self.scores[uid], response)
+        for uid, response, factor in responses:
+            new_scores[uid] = update_score(self.scores[uid], response) * factor
         
         if torch.sum(self.scores).item() != 0:
             self.scores = self.scores / torch.sum(self.scores)
@@ -187,7 +188,7 @@ class ValidatorSession:
         )
         
         self.weights = weights
-        self.log_weights()
+        # self.log_weights()
         
         self.last_updated_block = metagraph.block.item()
         
@@ -280,12 +281,18 @@ class ValidatorSession:
                 deserialize = True, 
                 timeout = 100
             )
+            
+            ip_array = [axon.ip for axon in filtered_axons]
+            print("ip_array", ip_array)
+            
+            weight_factors = [1 / ip_array.count(ip) for ip in ip_array]
 
+            print("weight_factors", weight_factors)
             verif_results = list(map(self.verify_proof_string, responses))
 
             self.log_verify_result(list(zip(filtered_uids, verif_results)))
             
-            self.update_scores(list(zip(filtered_uids, verif_results)))
+            self.update_scores(list(zip(filtered_uids, verif_results, weight_factors)))
 
             self.step += 1
 
