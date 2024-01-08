@@ -188,7 +188,7 @@ class ValidatorSession:
         )
         
         self.weights = weights
-        # self.log_weights()
+        self.log_weights()
         
         self.last_updated_block = metagraph.block.item()
         
@@ -281,13 +281,15 @@ class ValidatorSession:
                 deserialize = True, 
                 timeout = 100
             )
-            
             ip_array = [axon.ip for axon in filtered_axons]
+            coldkey_array = [axon.coldkey for axon in filtered_axons]
             print("ip_array", ip_array)
             
-            weight_factors = [1 / ip_array.count(ip) for ip in ip_array]
-
-            print("weight_factors", weight_factors)
+            ip_distributions = [1 / ip_array.count(ip) for ip in ip_array]
+            coldkey_distributions = [1 / coldkey_array.count(coldkey) for coldkey in coldkey_array]
+            
+            weight_factors = [ip_dist * coldkey_dist for ip_dist, coldkey_dist in zip(ip_distributions, coldkey_distributions)]
+            
             verif_results = list(map(self.verify_proof_string, responses))
 
             self.log_verify_result(list(zip(filtered_uids, verif_results)))
