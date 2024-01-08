@@ -286,7 +286,7 @@ class ValidatorSession:
             print("ip_array", ip_array)
             
             ip_distributions = [1 / ip_array.count(ip) for ip in ip_array]
-            coldkey_distributions = [1 / coldkey_array.count(coldkey) for coldkey in coldkey_array]
+            coldkey_distributions = [1 / (coldkey_array.count(coldkey) - 4 if coldkey_array.count(coldkey) > 4 else 1)  for coldkey in coldkey_array]
             
             weight_factors = [ip_dist * coldkey_dist for ip_dist, coldkey_dist in zip(ip_distributions, coldkey_distributions)]
             
